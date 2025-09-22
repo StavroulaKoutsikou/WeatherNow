@@ -12,6 +12,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import com.example.weathernow.domain.model.WeatherInfo
+import androidx.compose.runtime.saveable.rememberSaveable
+
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import androidx.compose.runtime.snapshotFlow
@@ -25,30 +27,15 @@ fun WeatherScreen(
     onLangChange: (String) -> Unit,
     onToggleDark: () -> Unit,
     onSaveLastCity: (String) -> Unit,
+    initialCity: String = "",
     vm: WeatherViewModel = hiltViewModel()
 ) {
-    var city by remember { mutableStateOf("") }
+    var city by rememberSaveable { mutableStateOf(initialCity) }
     val state by vm.state.collectAsState()
 
-    // (Προαιρετικό) Auto-search με debounce:
-    LaunchedEffect(currentLang) {
-        // reset or keep - optional
-    }
-    LaunchedEffect(city, currentLang) {
-        snapshotFlow { city }
-            .filter { it.length >= 3 }
-            .distinctUntilChanged()
-            .collect {
-                // μικρή καθυστέρηση για debounce
-                delay(400)
-                vm.fetch(it, currentLang)
-            }
-    }
-
-    // Αν πετύχει το fetch, αποθήκευσε last city
-    LaunchedEffect(state) {
-        val s = state
-        if (s is WeatherUiState.Success) onSaveLastCity(s.data.city)
+    // 1η φορά: αν έχεις last city, κάνε αυτόματο fetch
+    LaunchedEffect(Unit) {
+        if (city.isNotBlank()) vm.fetch(city, currentLang)
     }
 
     Scaffold(
@@ -71,18 +58,24 @@ fun WeatherScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            // 🔁 EN/EL chips
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically) {
+
                 FilterChip(
                     selected = currentLang == "en",
-                    onClick = { onLangChange("en") },
+                    onClick = {
+                        onLangChange("en")
+                        if (city.isNotBlank()) vm.fetch(city, "en")
+                    },
                     label = { Text("EN") }
                 )
                 FilterChip(
                     selected = currentLang == "el",
-                    onClick = { onLangChange("el") },
+                    onClick = {
+                        onLangChange("el")
+                        if (city.isNotBlank()) vm.fetch(city, "el")
+                    },
                     label = { Text("EL") }
                 )
             }
@@ -102,18 +95,16 @@ fun WeatherScreen(
 
             when (val s = state) {
                 is WeatherUiState.Idle -> Text(if (currentLang == "el") "Πληκτρολόγησε πόλη" else "Type a city")
-                is WeatherUiState.Loading -> {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                        CircularProgressIndicator()
-                    }
-                }
-                is WeatherUiState.Error -> Text(
-                    s.message,
-                    color = MaterialTheme.colorScheme.error
-                )
+                is WeatherUiState.Loading -> Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) { CircularProgressIndicator() }
+                is WeatherUiState.Error -> Text(s.message, color = MaterialTheme.colorScheme.error)
                 is WeatherUiState.Success -> WeatherCard(s.data)
             }
         }
+    }
+
+    // Αποθήκευση last city όταν έχουμε επιτυχία
+    LaunchedEffect(state) {
+        (state as? WeatherUiState.Success)?.let { onSaveLastCity(it.data.city) }
     }
 }
 

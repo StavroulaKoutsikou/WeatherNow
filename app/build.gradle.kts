@@ -9,7 +9,6 @@ plugins {
     id("org.jetbrains.kotlin.kapt")
 }
 
-// διαβάζουμε το OPENWEATHER_API_KEY από το local.properties (δεν ανεβαίνει στο GitHub)
 val localProps = Properties().apply {
     val f = rootProject.file("local.properties")
     if (f.exists()) load(f.inputStream())
@@ -29,7 +28,6 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // ➕ BuildConfig σταθερές για χρήση στον κώδικα (Retrofit/Hilt)
         buildConfigField(
             "String",
             "OPENWEATHER_BASE_URL",
@@ -75,32 +73,26 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
 
-    // Networking
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
-    // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
 
-    // Hilt (DI)
     implementation("com.google.dagger:hilt-android:2.51.1")
     kapt("com.google.dagger:hilt-android-compiler:2.51.1")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
-    // ViewModel for Compose
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
 
-    // Coil (εικόνες/εξωτερικά εικονίδια καιρού)
     implementation("io.coil-kt:coil-compose:2.7.0")
-    // Compose foundation & text (για KeyboardOptions)
+
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.ui:ui-text")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation("androidx.compose.runtime:runtime")
 
 
-    // Tests (όπως τα είχες)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
