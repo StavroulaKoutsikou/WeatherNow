@@ -25,17 +25,7 @@
 - **UI:** Jetpack Compose, Material 3  
 - **DI:** Hilt  
 - **Networking:** Retrofit, OkHttp (logging interceptor), GSON converter  
-- **Async:** Kotlin Coroutines, StateFlow  
-- **State/Prefs:** DataStore (Preferences)  
 - **Images:** Coil  
 - **Min SDK:** 24 — **Compile/Target:** 36  
 
----
 
-## Αρχιτεκτονική & Δομή
-
-**Clean Architecture + MVVM** σε τρία layers:
-
-- `data/` → Retrofit API, DTOs, Repository implementation  
-- `domain/` → Models, Repository interfaces  
-- `presentation/` → ViewModels, Compose screens, UI state
